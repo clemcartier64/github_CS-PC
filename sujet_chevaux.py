@@ -47,12 +47,12 @@ CL_WHITE="\033[01;37m"                  #  Blanc
 
 #-------------------------------------------------------
 import multiprocessing as mp
- 
+
 import os, time,math, random, sys, ctypes
 
 # Une liste de couleurs à affecter aléatoirement aux chevaux
 lyst_colors=[CL_WHITE, CL_RED, CL_GREEN, CL_BROWN , CL_BLUE, CL_MAGENTA, CL_CYAN, CL_GRAY,
-             CL_DARKGRAY, CL_LIGHTRED, CL_LIGHTGREEN,  CL_LIGHTBLU, CL_YELLOW, CL_LIGHTMAGENTA, CL_LIGHTCYAN]
+            CL_DARKGRAY, CL_LIGHTRED, CL_LIGHTGREEN,  CL_LIGHTBLU, CL_YELLOW, CL_LIGHTMAGENTA, CL_LIGHTCYAN]
 
 def effacer_ecran() : print(CLEARSCR,end='')
 def erase_line_from_beg_to_curs() : print("\033[1K",end='')
@@ -67,50 +67,52 @@ def en_rouge() : print(CL_RED,end='') # Un exemple !
 # La tache d'un cheval
 def un_cheval(ma_ligne : int, keep_running) : # ma_ligne commence à 0
     col=1
-
-    while col < LONGEUR_COURSE and keep_running.value :
+    longueur_course = 20
+    while col < longueur_course and keep_running.value :
         move_to(ma_ligne+1,col)         # pour effacer toute ma ligne
         erase_line_from_beg_to_curs()
         en_couleur(lyst_colors[ma_ligne%len(lyst_colors)])
         print('('+chr(ord('A')+ma_ligne)+'>')
 
         col+=1
+        Tableau[ma_ligne] = col
         time.sleep(0.1 * random.randint(1,5))
 
 #la tache de l'arbitre
 def arbitre(Tableau,keep_running):
+    longueur_course = 20
     while keep_running.value:
 
         liste = Tableau[:]
 
         maximum = max(liste)
         #move_to(Nb_process+1,1)         
-        #print(CLEARELN,end='')
-        #move_to(Nb_process+11,1)         
-        #print("le premier est le numero ",liste.index(maximum)+1)
+        print(CLEARELN,end='')
+        move_to(Nb_process+1,1)         
+        print("le premier est le numero ",liste.index(maximum)+1)
 
-        if maximum >= LONGEUR_COURSE-1:
+        if maximum >= longueur_course-1:
             
             move_to(Nb_process+1,1)         
             print(CLEARELN,end='')              # pour effacer toute ma ligne
             print("le premier est le numero ",liste.index(maximum)+1)
             raise
-           
+
 
     
 # ---------------------------------------------------
 # La partie principale :
 if __name__ == "__main__" :
-         
+
     import platform
     if platform.system() == "Darwin" :
         mp.set_start_method('fork') # Nécessaire sous macos, OK pour Linux (voir le fichier des sujets)
         
-    LONGEUR_COURSE = 20 # Tout le monde aura la même copie (donc no need to have a 'value')
+    longueur_course = 20 # Tout le monde aura la même copie (donc no need to have a 'value')
     keep_running=mp.Value(ctypes.c_bool, True)
 
     # course_hippique(keep_running)
-     
+
     Nb_process=20
     mes_process = [0 for i in range(Nb_process)]
     
@@ -131,6 +133,7 @@ if __name__ == "__main__" :
 
     for i in range(Nb_process): mes_process[i].join()
     id_arbitre.join()
+    
     move_to(24, 1)
     curseur_visible()
     print("Fini")
