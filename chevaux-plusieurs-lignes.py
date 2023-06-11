@@ -65,18 +65,29 @@ def en_rouge() : print(CL_RED,end='') # Un exemple !
 
 
 # La tache d'un cheval
-def un_cheval(ma_ligne : int, keep_running) : # ma_ligne commence à 0
+def un_cheval(ma_ligne: int, keep_running) : # ma_ligne commence à 0
     col=1
     
     while col < longueur_course and keep_running.value :
-        move_to(ma_ligne+1,col)         # pour effacer toute ma ligne
+        move_to(ma_ligne*4+2, col)         # pour effacer toute ma ligne
         erase_line_from_beg_to_curs()
         en_couleur(lyst_colors[ma_ligne%len(lyst_colors)])
-        print('('+chr(ord('A')+ma_ligne)+'>')
+        print("     _______\\/ ")
+        move_to(ma_ligne*4+3, col)         # pour effacer la ligne suivante
+        erase_line_from_beg_to_curs()
+        print("    /−−−− _  \\ ")
+        move_to(ma_ligne*4+4, col)         # pour effacer la ligne suivante
+        erase_line_from_beg_to_curs()
+        print("   /|_____/|  ")
+        move_to(ma_ligne*4+5, col)         # pour effacer la ligne suivante
+        erase_line_from_beg_to_curs()
+        print("   /\\     /\\  ")
         
         Tableau[ma_ligne] = col
         col+=1
         time.sleep(0.1 * random.randint(1,5))
+
+
 
 # la tache de l'arbitre
 def arbitre(Tableau, keep_running):
@@ -86,21 +97,26 @@ def arbitre(Tableau, keep_running):
         liste = Tableau[:]
 
         maximum = max(liste)
-        move_to(Nb_process,1)         
+        minimum = min(liste)
+        indM = liste.index(maximum)
+        indm = liste.index(minimum)
+        
+        move_to(Nb_process*4,1)         
         print(CLEARELN,end='')
-        move_to(Nb_process+1,1)         
-        print("le ",liste.index(maximum)+1, "est en tete")
+        move_to(Nb_process*4+1,1)         
+        print(f"premier : {indM+1} | dernier : {indm}")
 
         if maximum >= longueur_course-5:
             
-            move_to(Nb_process+1,1)
+            print(CLEARELN,end='')     
+            move_to(Nb_process*4+2,1)
             print(CLEARELN,end='')              # pour effacer toute ma ligne      
-            print("le premier est le numero ",liste.index(maximum)+1)
+            print(f"le cheval {indm+1} a gagné et le {indm} a perdu")
             
             break
 
 
-    
+
 # ---------------------------------------------------
 # La partie principale :
 if __name__ == "__main__" :
@@ -114,7 +130,7 @@ if __name__ == "__main__" :
 
     # course_hippique(keep_running)
 
-    Nb_process=20
+    Nb_process = 7
     mes_process = [0 for i in range(Nb_process)]
     
     Tableau = mp.Array('i', 20)
@@ -129,13 +145,13 @@ if __name__ == "__main__" :
     id_arbitre = mp.Process(target=arbitre, args= (Tableau,keep_running,))
     id_arbitre.start()
     
-    move_to(Nb_process+2, 1)
+    move_to(Nb_process*4+2, 1)
     print("tous lancés")
 
     for i in range(Nb_process): mes_process[i].join()
     id_arbitre.join()
     
-    move_to(24, 1)
+    move_to(Nb_process*4+5, 1)
     curseur_visible()
     print("Fini")
 
