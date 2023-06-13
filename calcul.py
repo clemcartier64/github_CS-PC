@@ -2,7 +2,7 @@ import multiprocessing as mp
 import time, random
 
 
-def donne_des_calculs(nb_expr):
+def donne_des_calculs(nb_expr, identifiant):
 
     caracteres=["*","/","+","-"]
     for _ in range(nb_expr):
@@ -13,46 +13,50 @@ def donne_des_calculs(nb_expr):
         calcul = calcul + str(chiffre1)
         calcul = calcul + caracteres[operateur]
         calcul = calcul + str(chiffre2)
-        queue.put(calcul)
-        print("Le client a demandé ", calcul)
+        queueCalculs.put((calcul, identifiant))
+        print(f"Le client {identifiant} a demandé {calcul}")
     
 def calcule():
-
-    calcul = queue.get()
-    res =  str(eval(calcul))
-    print(f"Un serveur a calculé {calcul} = {res}")
-    time.sleep(1)
+    while not queueCalculs.empty():
+        calcul, identifiant = queueCalculs.get()
+        res =  str(eval(calcul))
+        print(f"Un serveur a calculé {calcul} = {res}")
+        # time.sleep(1)
+        les_queues[identifiant].put(res)
         
 
 
 if __name__ == '__main__':
 
-    queue = mp.Queue()
-    queueRes = mp.Queue()
-
-
-    nb_expr = 50
-    expressions = []
-    
-    demandeur = mp.Process(target=donne_des_calculs, args=(nb_expr,))
-    demandeur.start()
-    expressions.append(demandeur)
-
     nb_calculateurs = 10
     mes_esclaves = []
+    mes_demandeurs = []
+    queueCalculs = mp.Queue()
+    nb_demandeurs = 10
+    nb_expr = 50
+    les_queues = []
+    
+    
+    for i in range(nb_demandeurs):
+        queueRes = mp.Queue()
+        les_queues.append(queueRes)
+
+    for i in range(nb_demandeurs):
+        demandeur = mp.Process(target=donne_des_calculs, args=(nb_expr,i))
+        demandeur.start()
+        mes_demandeurs.append(demandeur)
+
+    
     for _ in range(nb_calculateurs):
         calculateurs = mp.Process(target=calcule)
         calculateurs.start()
-        expressions.append(calculateurs)
-
-    for p in mes_esclaves: p.join()
+        mes_esclaves.append(calculateurs)
 
     
 
-    2+3
+    for p in mes_esclaves: p.join()
+    for p in mes_demandeurs: p.join()
 
-    5*6
+    
 
-    7/2
-
-    (2+3)-(5*6)/(7/2)
+    

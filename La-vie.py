@@ -65,7 +65,7 @@ import random
 import time
 
 # Taille de la grille
-TAILLE_GRILLE = (15, 15)
+TAILLE_GRILLE = (70, 50)
 
 def afficher_grille(grille):
     os.system("clear")  # Effacer l'écran (pour Linux/Mac)
@@ -77,7 +77,7 @@ def afficher_grille(grille):
             if cellule:
                 ligne_str += "■"  # Cellule vivante
             else:
-                ligne_str += "   "  # Cellule morte
+                ligne_str += "□"  # Cellule morte
         print(ligne_str)
 
 def initialiser_grille():
@@ -116,7 +116,7 @@ def jeu_de_la_vie(grille, keep_running):
     while keep_running.value:
         afficher_grille(grille)
         grille = mise_a_jour_grille(grille)
-        time.sleep(3)  # Attente d'une seconde entre chaque génération
+        time.sleep(0.5)  # Attente d'une seconde entre chaque génération
 
 # La partie principale
 if __name__ == "__main__":
