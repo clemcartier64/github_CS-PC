@@ -18,16 +18,19 @@ def donne_des_calculs(nb_expr, identifiant):
 
         res = les_queues[identifiant].get()
         print(f"j'ai mon resultat {res}")
+    
+    # Lorsqu'un demandeur a fini d'envoyer ses calculs il décrémente fini pour éviter le problème avec get dans une queue (queueCalculs) qui pourrait
+    # etre vide
     fini.value -= 1
     
 def calcule():
-    sauce = True
-    while sauce:
+    keep_running = True
+    while keep_running:     
         try:
-            calcul, identifiant = queueCalculs.get(timeout=1)
+            calcul, identifiant = queueCalculs.get(timeout=1) # leve le blocage de get au bout dune seconde si rien a get et passe dans except
         except:
             if fini.value == 0:
-                sauce = False
+                keep_running = False
             continue
         res =  str(eval(calcul))
         print(f"Un serveur a calculé {calcul} = {res}")
@@ -38,14 +41,16 @@ def calcule():
 
 if __name__ == '__main__':
 
-    nb_calculateurs = 2
+    nb_calculateurs = 5
     mes_esclaves = []
     mes_demandeurs = []
     queueCalculs = mp.Queue()
-    nb_demandeurs = 3
-    nb_expr = 1
+    nb_demandeurs = 10
+    nb_expr = 4
     les_queues = []
-    fini = mp.Value("i", nb_demandeurs)
+    
+    # on initialise fini egale aux nb de demandeurs
+    fini = mp.Value("i", nb_demandeurs) 
     
     
     for i in range(nb_demandeurs):
