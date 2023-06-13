@@ -15,23 +15,19 @@ def donne_des_calculs(nb_expr, identifiant):
         calcul = calcul + str(chiffre2)
         queueCalculs.put((calcul, identifiant))
         print(f"Je suis le client {identifiant} et je demande {calcul}")
-
-        res = les_queues[identifiant].get()
-        print(f"j'ai mon resultat {res}")
     fini.value -= 1
     
 def calcule():
-    sauce = True
-    while sauce:
+    while not queueCalculs.empty():
         try:
             calcul, identifiant = queueCalculs.get(timeout=1)
         except:
             if fini.value == 0:
-                sauce = False
+                break
             continue
         res =  str(eval(calcul))
         print(f"Un serveur a calculé {calcul} = {res}")
-        time.sleep(1)
+        # time.sleep(1)
         les_queues[identifiant].put(res)
         
 
