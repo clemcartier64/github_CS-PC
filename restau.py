@@ -3,67 +3,69 @@ import random
 import multiprocessing as mp
 import curses
 
-def client_process(server_queue, display_list):
+def travail_client(queue_serveur, liste_dAffichage):
     client_id = 1
     while True:
-        time.sleep(random.randint(1, 4))
-        menu_item = random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        server_queue.put((client_id, menu_item))
-        display_list.append(f"Commande du client {client_id} : Menu {menu_item}")
-        client_id += 1
+        time.sleep(random.randint(1, 2))                                                 # un client arrive aléatoirement 
+        menu_item = random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')                          # il choisit un menu
+        queue_serveur.put((client_id, menu_item))                                        # il envoie son id et son menu dans la queue pour les serveurs et
+        liste_dAffichage.append(f"Commande du client {client_id} : Menu {menu_item}")    # il envoie le message correspondant pour l'affichage donc dans la liste
+        client_id += 1                                                                   # change d'identifiant pour le prochain client
 
-def server_process(server_id, server_queue, kitchen_queue, display_list):
+def commande_serveur(server_id, queue_serveur, queue_cuisine, liste_dAffichage):
     while True:
-        client_id, menu_item = server_queue.get()
-        display_list.append(f"Serveur {server_id} prend la commande du client {client_id} : Menu {menu_item}")
-        time.sleep(random.randint(1, 3))  # Simulation de préparation de commande
-        kitchen_queue.put((server_id, client_id, menu_item))
+        client_id, menu_item = queue_serveur.get()                                                                   # récupere une commande d'un client dans la queue
+        liste_dAffichage.append(f"  Serveur {server_id} prend la commande du client {client_id} : Menu {menu_item}") # Dis ce qu'il fait sur l'écran
+        time.sleep(random.randint(1, 3))                                                                             # Simulation de préparation de commande
+        queue_cuisine.put((server_id, client_id, menu_item))                                                         # Envoie la commande à la queue cuisine avec notement un serveur_id
 
-def kitchen_process(kitchen_queue, display_list):
-    while True:
-        server_id, client_id, menu_item = kitchen_queue.get()
-        display_list.append(f"Serveur {server_id} délivre la commande du client {client_id} : Menu {menu_item}")
+def cuisto(queue_cuisine, liste_dAffichage):
+    while True: 
+        server_id, client_id, menu_item = queue_cuisine.get()                                                                                     # récupere la commande prise par le bien connu serveur
+        liste_dAffichage.append(f"      Le cuisto prepare la commande du client {client_id} : Menu {menu_item} prise par le serveur {server_id}") # affiche 
+        liste_dAffichage.append(f"          Serveur {server_id} délivre la commande du client {client_id} : Menu {menu_item}")
 
-def display_process(display_list, screen):
+def majordHomme(liste_dAffichage, screen):
     while True:
         screen.clear()
-        for i, line in enumerate(display_list[-20:]):  # Afficher les 10 dernières lignes
+        for i, line in enumerate(liste_dAffichage[-20:]):  # Garde afficher à l'ecran les 20 dernier messages
             screen.addstr(i, 0, line)
-        screen.refresh()
-        time.sleep(1)  # Rafraîchir l'affichage toutes les secondes
+        screen.refresh()                                   # Rafraîchir l'affichage
+        time.sleep(1)                                      # toutes les secondes
 
 def main(screen):
-    server_count = 5
-    server_queue = mp.Queue()
-    kitchen_queue = mp.Queue()
-    display_list = mp.Manager().list()
+    
+    nb_serveur = 5
+    queue_serveur = mp.Queue()
+    queue_cuisine = mp.Queue()
+    liste_dAffichage = mp.Manager().list() # liste partagée qui gère l'affichage
 
-    processes = []
+    mes_process = [] # Tous dans le même tab
 
     # Processus clients
-    client_proc = mp.Process(target=client_process, args=(server_queue, display_list))
-    processes.append(client_proc)
+    process_client = mp.Process(target=travail_client, args=(queue_serveur, liste_dAffichage))
+    mes_process.append(process_client)
 
     # Processus serveurs
-    for i in range(server_count):
-        server_proc = mp.Process(target=server_process, args=(i + 1, server_queue, kitchen_queue, display_list))
-        processes.append(server_proc)
+    for i in range(nb_serveur):
+        process_serveur = mp.Process(target=commande_serveur, args=(i + 1, queue_serveur, queue_cuisine, liste_dAffichage))
+        mes_process.append(process_serveur)
 
     # Processus cuisine
-    kitchen_proc = mp.Process(target=kitchen_process, args=(kitchen_queue, display_list))
-    processes.append(kitchen_proc)
+    process_cuisine = mp.Process(target=cuisto, args=(queue_cuisine, liste_dAffichage))
+    mes_process.append(process_cuisine)
 
     # Processus affichage
-    display_proc = mp.Process(target=display_process, args=(display_list, screen))
-    processes.append(display_proc)
+    process_affichage = mp.Process(target=majordHomme, args=(liste_dAffichage, screen))
+    mes_process.append(process_affichage)
 
     # Démarrage des processus
-    for process in processes:
+    for process in mes_process:
         process.start()
 
     # Attente de la terminaison des processus
-    for process in processes:
+    for process in mes_process:
         process.join()
 
 if __name__ == "__main__":
-    curses.wrapper(main)
+    curses.wrapper(main) # Utilisation du module curse pour l'affichage
