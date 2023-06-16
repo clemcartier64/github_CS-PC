@@ -17,7 +17,7 @@ def donne_des_calculs(nb_expr, identifiant):
         print(f"Je suis le client {identifiant} et je demande {calcul}")
 
         res = les_queues[identifiant].get()
-        print(f"    Je suis le client {identifiant} et j'ai mon resultat {res}")
+        print(f"    Je suis le client {identifiant} et j'ai mon resultat {(res)}")
     
     # Lorsqu'un demandeur a fini d'envoyer ses calculs il décrémente fini pour éviter le problème avec get dans une queue (UniqueQueueCalculs) qui pourrait
     # etre vide
@@ -32,7 +32,7 @@ def calcule():
             if fini.value == 0: # on regarde si tout les demandeurs on envoyés leurs requetes
                 keep_running = False
             continue
-        res =  str(eval(calcul))
+        res =  str(round(eval(calcul), 2)) # evaluer donc calculer, arrondir et sringifier
         print(f"  Le process {mp.current_process().name} a calculé {calcul} = {res}")
         time.sleep(1)
         les_queues[identifiant].put(res)
@@ -41,12 +41,12 @@ def calcule():
 
 if __name__ == '__main__':
 
-    nb_calculateurs = 5
+    nb_calculateurs = 20
     mes_calculateurs = []
     mes_demandeurs = []
     UniqueQueueCalculs = mp.Queue()
-    nb_demandeurs = 10
-    nb_expr = 4
+    nb_demandeurs = 3
+    nb_expr = 2
     les_queues = []
     
     # on initialise fini egale aux nb de demandeurs

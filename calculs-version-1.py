@@ -19,7 +19,6 @@ def donne_des_calculs(nb_expr):
     
 def calcule():
     keep_running = True
-    print(fini.value)
     while keep_running:
         try:
             calcul = queueCalculs.get(timeout=1)
