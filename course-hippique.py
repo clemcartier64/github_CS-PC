@@ -47,6 +47,7 @@ CL_WHITE="\033[01;37m"                  #  Blanc
 
 #-------------------------------------------------------
 import multiprocessing as mp
+
 import os, time,math, random, sys, ctypes
 
 # Une liste de couleurs à affecter aléatoirement aux chevaux
@@ -64,75 +65,127 @@ def en_rouge() : print(CL_RED,end='') # Un exemple !
 
 
 # La tache d'un cheval
-def un_cheval(Tableau,ma_ligne : int, keep_running) : # ma_ligne commence à 0
-    col = 1
-
-    while col < LONGEUR_COURSE and keep_running.value :
+def un_cheval(ma_ligne : int, keep_running) : # ma_ligne commence à 0
+    col=1
+    
+    while col < longueur_course and keep_running.value :
         move_to(ma_ligne+1,col)         # pour effacer toute ma ligne
         erase_line_from_beg_to_curs()
         en_couleur(lyst_colors[ma_ligne%len(lyst_colors)])
         print('('+chr(ord('A')+ma_ligne)+'>')
         
-
         Tableau[ma_ligne] = col
         col+=1
         time.sleep(0.1 * random.randint(1,5))
 
-#la tache de l'arbitre
-def arbitre(Tableau,keep_running):
+# la tache de l'arbitre
+def arbitre(Tableau, keep_running):
+    
     while keep_running.value:
-
+        
         liste = Tableau[:]
 
-        maximum = max(liste)
-        move_to(Nb_process+1,1)         # pour effacer toute ma ligne
+        mininmum = max(liste)
+        
+        indicem = indices_min(liste)
+        indiceM = indices_max(liste)
+        
+        move_to(Nb_process,1)         
         print(CLEARELN,end='')
-        move_to(Nb_process+1,1)         # pour effacer toute ma ligne
-        #print("le premier est le numero ",liste.index(maximum)+1)
+        move_to(Nb_process+1,1) 
+        print(CLEARELN,end='')        
+        print(f"En-tête(s) : {indiceM} | Dernier(s) : {indicem}")
 
-        if maximum >= LONGEUR_COURSE-4:
+
+        if mininmum >= longueur_course-5:
             
-            move_to(Nb_process+11,1)         # pour effacer toute ma ligne
-            print(CLEARELN,end='')
-            move_to(Nb_process+11,1)         # pour effacer toute ma ligne
-            print("le premier est le numero ",liste.index(maximum)+1)
+            move_to(Nb_process+1,1)
+            print(CLEARELN,end='')              # pour effacer toute ma ligne      
+            print(f"Gagnant(s) : {indiceM} | Perdant(s) : {indicem}")
+            
             break
 
-#-----------------------------------------------
+def indices_max(liste):
+    """Fonction qui donne les positions du ou DES maxima dans une liste
     
+    Args:
+        liste (list): liste de nombre
+
+    Returns:
+        str: position des maxima séparés par des virgules si besoin
+    """
+    max_indices = []
+    max_value = float('-inf')
+
+    for index, valeur in enumerate(liste):
+        if valeur > max_value:
+            max_value = valeur
+            max_indices = [index]
+        elif valeur == max_value:
+            max_indices.append(index+1)
+
+    return ', '.join(str(i) for i in max_indices)
+
+def indices_min(liste):
+    """Fonction qui donne les positions du ou DES minima dans une liste
+    
+    Args:
+        liste (list): liste de nombre
+
+    Returns:
+        str: position des minima séparés par des virgules si besoin
+    """
+    min_indices = []
+    min_value = float('inf')
+
+    for index, valeur in enumerate(liste):
+        if valeur < min_value:
+            min_value = valeur
+            min_indices = [index]
+        elif valeur == min_value:
+            min_indices.append(index+1)
+
+    return ', '.join(str(i) for i in min_indices)
+
 # ---------------------------------------------------
 # La partie principale :
-if __name__ == "__main__":
-    
+if __name__ == "__main__" :
+
     import platform
     if platform.system() == "Darwin" :
         mp.set_start_method('fork') # Nécessaire sous macos, OK pour Linux (voir le fichier des sujets)
         
-    LONGEUR_COURSE = 100 # Tout le monde aura la même copie (donc no need to have a 'value')
+    longueur_course = 20 # Tout le monde aura la même copie (donc no need to have a 'value')
     keep_running=mp.Value(ctypes.c_bool, True)
 
     # course_hippique(keep_running)
-    
-    Nb_process = 20
+
+    Nb_process=20
     mes_process = [0 for i in range(Nb_process)]
     
     Tableau = mp.Array('i', 20)
+
     effacer_ecran()
     curseur_invisible()
 
     for i in range(Nb_process):  # Lancer   Nb_process  processus
-        mes_process[i] = mp.Process(target=un_cheval, args= (Tableau,i*2,keep_running,))
+        mes_process[i] = mp.Process(target=un_cheval, args= (i,keep_running,))
         mes_process[i].start()
 
     id_arbitre = mp.Process(target=arbitre, args= (Tableau,keep_running,))
     id_arbitre.start()
-
-    move_to(Nb_process+10, 1)
+    
+    move_to(Nb_process+3, 1)
     print("tous lancés")
 
     for i in range(Nb_process): mes_process[i].join()
-
     id_arbitre.join()
-    move_to(24, 1)
+    
+    move_to(25, 1)
     curseur_visible()
     print("Fini")
+
+    
+    
+    
+
