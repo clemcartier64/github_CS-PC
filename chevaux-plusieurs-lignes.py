@@ -94,28 +94,68 @@ def arbitre(Tableau, keep_running):
     
     while keep_running.value:
         
-        liste = Tableau[:]
-
-        maximum = max(liste)
-        minimum = min(liste)
-        indM = liste.index(maximum)
-        indm = liste.index(minimum)
+        liste = Tableau[:] # copie du tableau à tout instant 
         
-        move_to(Nb_process*4,1)         
+        minimum = min(liste) # pour la condition du if
+        
+        indicem = indices_min(liste)
+        indiceM = indices_max(liste)
+        
+        move_to(Nb_process*4+2,1)         
         print(CLEARELN,end='')
-        move_to(Nb_process*4+1,1)         
-        print(f"premier : {indM+1} | dernier : {indm}")
-
-        if maximum >= longueur_course-5:
+        move_to(Nb_process*4+3,1) 
+        print(CLEARELN,end='')        
+        print(f"En-tête(s) : {indiceM} | Dernier(s) : {indicem}")
+        
+        if minimum >= longueur_course-5:
             
             print(CLEARELN,end='')     
-            move_to(Nb_process*4+2,1)
+            move_to(Nb_process*4+3,1)
             print(CLEARELN,end='')              # pour effacer toute ma ligne      
-            print(f"le cheval {indm+1} a gagné et le {indm} a perdu")
-            
+            print(f"Gagnant(s) : {indiceM} | Perdant(s) : {indicem}")
             break
+        
+def indices_max(liste):
+    """Fonction qui donne les positions du ou DES maxima dans une liste
+    
+    Args:
+        liste (list): liste de nombre
 
+    Returns:
+        str: position des maxima séparés par des virgules si besoin
+    """
+    max_indices = []
+    max_value = float('-inf')
 
+    for index, valeur in enumerate(liste):
+        if valeur > max_value:
+            max_value = valeur
+            max_indices = [index]
+        elif valeur == max_value:
+            max_indices.append(index+1)
+
+    return ', '.join(str(i) for i in max_indices)
+
+def indices_min(liste):
+    """Fonction qui donne les positions du ou DES minima dans une liste
+    
+    Args:
+        liste (list): liste de nombre
+
+    Returns:
+        str: position des minima séparés par des virgules si besoin
+    """
+    min_indices = []
+    min_value = float('inf')
+
+    for index, valeur in enumerate(liste):
+        if valeur < min_value:
+            min_value = valeur
+            min_indices = [index]
+        elif valeur == min_value:
+            min_indices.append(index+1)
+
+    return ', '.join(str(i) for i in min_indices)
 
 # ---------------------------------------------------
 # La partie principale :
@@ -125,15 +165,13 @@ if __name__ == "__main__" :
     if platform.system() == "Darwin" :
         mp.set_start_method('fork') # Nécessaire sous macos, OK pour Linux (voir le fichier des sujets)
         
-    longueur_course = 20 # Tout le monde aura la même copie (donc no need to have a 'value')
+    longueur_course = 100 # Tout le monde aura la même copie (donc no need to have a 'value')
     keep_running=mp.Value(ctypes.c_bool, True)
-
-    # course_hippique(keep_running)
 
     Nb_process = 7
     mes_process = [0 for i in range(Nb_process)]
     
-    Tableau = mp.Array('i', 20)
+    Tableau = mp.Array('i', Nb_process)
 
     effacer_ecran()
     curseur_invisible()
@@ -151,7 +189,7 @@ if __name__ == "__main__" :
     for i in range(Nb_process): mes_process[i].join()
     id_arbitre.join()
     
-    move_to(Nb_process*4+5, 1)
+    move_to(Nb_process*4+4, 1)
     curseur_visible()
     print("Fini")
 
